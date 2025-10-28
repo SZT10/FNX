@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Suzart TIMER</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Fontes Google -->
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue:wght@700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="https://fenixconcursosmilitares.com.br/public/assets/images/relogio.png">
+
+
+  <style>
+    :root {
+      --orange: #FF6600;
+      --white: #fff;
+      --black: #151515;
+      --gray-dark: #222;
+      --font-digital: 'Bebas Neue', 'Arial Black', 'Arial', sans-serif;
+      --fire-bar-thickness: 24px;
+      --fire-bar-radius: 12px;
+    }
+    html, body {
+      margin: 0; padding: 0;
+      background: var(--black);
+      color: var(--white);
+      font-family: 'Montserrat', Arial, Helvetica, sans-serif;
+      min-height: 100vh; height: 100vh;
+      min-width: 100vw; width: 100vw;
+      box-sizing: border-box;
+      overflow: hidden; /* Impede rolagem vertical e horizontal */
+    }
+    body {
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      height: 100vh; width: 100vw; overflow: hidden;
+    }
+    .container-outer, body {
+      min-height: 100vh; width: 100vw;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    .container {
+      position: relative; z-index: 1;
+      min-width: 320px; max-width: 900px; width: 98vw;
+      background: transparent; padding: 0;
+      display: flex; flex-direction: column; align-items: center;
+      box-sizing: border-box;
+    }
+    .logo-img { width: 340px; height: 180px; object-fit: contain; display: block; margin-bottom: 8px; margin-top: 8px; background: transparent; pointer-events: none; user-select: none; transition: width 0.2s, height 0.2s; }
+    @media (max-width: 700px) {.logo-img { width: 160px; height: 68px; }}
+    @media (max-width: 420px) {.logo-img { width: 72px; height: 38px; }}
+    .motivacional-row {
+      min-height: 38px;
+      margin-bottom: 20px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .sub-title {
+      margin-bottom: 24px; font-size: 2.2rem; letter-spacing: 0.3px; font-weight: 500; text-align: center;
+      transition: color 0.22s;
+      min-height: 36px;
+      max-width: 660px;
+      width: 94vw;
+      word-break: break-word;
+    }
+    .progress-row { width: 95%; display: flex; align-items: flex-end; justify-content: flex-end; margin-bottom: 7px; }
+    .referencia-label {
+      font-family: var(--font-digital);
+      font-size: 1.2rem;
+      color: var(--orange);
+      letter-spacing: 1.5px;
+      text-align: right;
+      min-width: 60px;
+      user-select: none;
+      font-weight: bold;
+      background: transparent;
+      margin-right: 5px;
+      transition: color 0.22s;
+    }
+    .progress-bar-bg {
+      width: 95vw;
+      max-width: 690px;
+      height: var(--fire-bar-thickness);
+      background: var(--gray-dark);
+      border-radius: var(--fire-bar-radius);
+      margin-bottom: 18px;
+      overflow: visible;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      position: relative;
+      box-sizing: border-box;
+    }
+    .progress-bar {
+      height: 100%;
+      background: var(--orange);
+      border-radius: var(--fire-bar-radius);
+      transition: width 0.22s cubic-bezier(.42,0,.58,1);
+      width: 0%;
+      min-width: 0;
+      position: relative;
+      z-index: 1;
+    }
+    .fire-icon {
+      position: absolute;
+      top: calc(-22px + var(--fire-bar-thickness) / 2 - 44px/2);
+      width: 62px;
+      height: 62px;
+      pointer-events: none;
+      user-select: none;
+      z-index: 2;
+      left: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      will-change: left;
+      /* Remove filtro antigo; animação será dentro do SVG/fire */
+    }
+    .fire-flame {
+      width: 62px;
+      height: 62px;
+      display: block;
+    }
+    .timer-aba-row {
+      width: 100%;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      margin-bottom: 0;
+      gap: 0 0;
+    }
+    .timer-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-width: 0;
+    }
+    .timer-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 0;
+      margin: 0 auto;
+      padding: 0;
+      height: 98px;
+    }
+    .timer, .fake-timer-edit, #timerInput, .timer-break {
+      font-family: var(--font-digital);
+      font-size: 5.3rem;
+      font-weight: 900;
+      letter-spacing: 17px;
+      line-height: 1.05;
+      background: transparent;
+      color: var(--white);
+      text-align: center;
+      white-space: pre;
+      border: none;
+      outline: none;
+      padding: 0;
+      box-sizing: border-box;
+      display: block;
+      overflow: visible;
+      user-select: none;
+      margin: 0;
+      min-width: 0;
+      max-width: 100vw;
+      transition: color 0.18s;
+    }
+    .fake-timer-edit {
+      color: var(--orange) !important;
+      border: 2px dashed var(--orange);
+      pointer-events: none;
+      background: transparent;
+      z-index: 2;
+    }
+    #timerInput {
+      display: none;
+      background: transparent;
+      color: transparent;
+      caret-color: var(--orange);
+      z-index: 3;
+    }
+    #timerInput:focus { outline: 2px solid var(--orange);}
+    .timer.editable { border: 2px dashed var(--orange); color: var(--orange); cursor: pointer; padding-bottom: 0; padding-top: 0;}
+    .timer-break {
+      color: var(--orange) !important;
+      font-family: var(--font-digital);
+      letter-spacing: 17px;
+      display: block;
+    }
+    /* ANIMAÇÃO DA PALAVRA DEFINIR */
+    #timerDefinir {
+      color: var(--orange);
+      cursor: pointer;
+      animation: definirPulse 1.35s infinite, definirScale 2.3s infinite;
+      font-family: var(--font-digital);
+      font-size: 5.3rem;
+      font-weight: 900;
+      letter-spacing: 17px;
+      border: 2px dashed var(--orange);
+      border-radius: 15px;
+      padding: 0 18px;
+      box-sizing: border-box;
+      user-select: none;
+      transition: background 0.22s, color 0.22s, box-shadow 0.22s;
+      text-shadow: 0 0 12px #ff660088, 0 0 8px #ff660066;
+    }
+    @keyframes definirPulse {
+      0% { box-shadow: 0 0 0 0 #ff660088; }
+      80% { box-shadow: 0 0 0 30px #ff660000; }
+      100% { box-shadow: 0 0 0 0 #ff660000; }
+    }
+    @keyframes definirScale {
+      0% { transform: scale(1);}
+      30% { transform: scale(1.05);}
+      60% { transform: scale(1);}
+      100% { transform: scale(1);}
+    }
+    .tabs {
+      display: flex;
+      flex-direction: column;
+      align-items: center !important;
+      justify-content: flex-end;
+      min-width: 120px;
+      margin-bottom: 10px;
+      gap: 0px;
+      z-index: 1;
+      flex-shrink: 0;
+    }
+    .tab { font-size: 1.15rem; font-weight: 700; letter-spacing: 0.7px; color: #aaa; cursor: pointer; transition: color 0.18s; margin-bottom: 2px; user-select: none; text-align: center; line-height: 1.1;}
+    .tab.active { color: var(--orange); letter-spacing: 1.3px; }
+    .tab.inactive:hover { color: var(--orange); text-decoration: underline;}
+    @media (max-width: 900px) {
+      .timer, .fake-timer-edit, #timerInput, .timer-break, #timerDefinir { font-size: 2.3rem; letter-spacing: 6px; }
+      .timer-wrap { height: 42px; }
+      .progress-bar-bg { height: 13px; }
+      .fire-icon, .fire-flame { width: 33px; height: 33px; }
+      #timerDefinir { font-size: 2.3rem; letter-spacing: 6px;}
+    }
+    @media (max-width: 520px) {
+      .timer, .fake-timer-edit, #timerInput, .timer-break, #timerDefinir { font-size: 1.1rem; letter-spacing: 2px; }
+      .logo-img { width: 52px; height: 30px;}
+      .controls { gap: 5px; }
+      .referencia-label { font-size: 0.8rem; }
+      .timer-wrap { height: 20px; }
+      .progress-bar-bg { height: 8px; }
+      .fire-icon, .fire-flame { width: 16px; height: 16px;}
+      #timerDefinir { font-size: 1.1rem; letter-spacing: 2px;}
+    }
+    .controls {
+      display: flex; flex-direction: row; align-items: center; justify-content: center; margin: 18px 0 0 0; gap: 18px;
+    }
+    .control-btn {
+      width: 51px; height: 51px; border-radius: 50%; border: none; outline: none;
+      background: var(--orange); color: var(--white);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.1rem; cursor: pointer; box-shadow: none; margin: 0;
+      transition: background 0.18s, color 0.14s, box-shadow 0.14s, transform 0.14s;
+      user-select: none;
+    }
+    .control-btn.stop { background: var(--white); color: var(--orange); border: 2px solid var(--orange);}
+    .control-btn.restart { background: var(--orange); color: var(--white); font-size: 1.2rem;}
+    .control-btn:active { opacity: 0.85;}
+    .pulse-animate {
+      animation: pulseBtn 1.05s infinite;
+      box-shadow: 0 0 0 0 rgba(255,102,0,0.6);
+    }
+    @keyframes pulseBtn {
+      0% { box-shadow: 0 0 0 0 rgba(255,102,0,0.7);}
+      70% { box-shadow: 0 0 0 15px rgba(255,102,0,0.0);}
+      100% { box-shadow: 0 0 0 0 rgba(255,102,0,0);}
+    }
+    .paused-label { margin-top: 12px; font-size: 0.9rem; color: var(--white); letter-spacing: 0.5px; text-align: center;}
+    .paused-time { font-family: var(--font-digital); font-size: 1.0rem; color: var(--orange); margin-top: 3px; letter-spacing: 4px; text-align: center; display: block; font-weight: bold;}
+    .rodape { width: 100vw; text-align: center; color: #fff; font-size: 1.5rem; letter-spacing: 0.5px; padding: 6px 0 8px 0; position: fixed; left: 0; bottom: 0; background: transparent; z-index: 10; font-family: 'Montserrat', Arial, Helvetica, sans-serif; opacity: 0.9; user-select: none;}
+    .success-modal-bg { position: fixed; z-index: 999; inset: 0; background: rgba(20, 20, 20, 0.98); display: flex; align-items: center; justify-content: center; flex-direction: column; transition: opacity 0.3s; animation: fadeInBg 0.6s;}
+    @keyframes fadeInBg { from { opacity: 0; } to   { opacity: 1; } }
+    .success-modal-content { display: flex; flex-direction: column; align-items: center; text-align: center;}
+    .success-skull {
+      width: 400px; height: 400px; object-fit: contain; margin: 0 auto 8px auto; display: block;
+      filter: drop-shadow(0 2px 6px #000);
+    }
+    .success-title { font-size: 1.8rem; color: var(--orange); margin-bottom: 7px; font-family: var(--font-digital); font-weight: 900; letter-spacing: 5px;}
+    .success-msg { color: var(--white); font-size: 1.2rem; margin-bottom: 16px; max-width: 280px;}
+    .success-btn { background: var(--orange); color: #fff; font-size: 1.02rem; padding: 7px 21px; border-radius: 10px; border: none; margin-top: 10px; cursor: pointer; font-family: 'Montserrat', Arial, Helvetica, sans-serif; font-weight: 700; transition: background 0.18s;}
+    .success-btn:hover { background: #ff7700;}
+    .fenix-diagonal-bg { position: fixed; inset: 0; background: rgba(10,10,10,0.90); z-index: 2000; pointer-events: none; overflow: hidden;}
+    .fenix-diagonal { position: absolute; left: 0; bottom: 0; width: 100vw; height: auto; max-width: 100vw; max-height: 100vh; opacity: 0.62; transform: translate(-40%,40%) scale(0.95) rotate(-10deg); animation: fenixDiagonalFly 2.5s cubic-bezier(.7,0,.3,1) forwards;}
+    @keyframes fenixDiagonalFly {
+      0% { left: 0; bottom: 0; transform: translate(-40%,40%) scale(0.95) rotate(-10deg); opacity: 0.3;}
+      10% { opacity: 0.72;}
+      80% { opacity: 0.66;}
+      90% { opacity: 0.44;}
+      100% { left: 100vw; bottom: 100vh; transform: translate(-60%,-50%) scale(0.88) rotate(15deg); opacity: 0.0;}
+    }
+    /* RESPONSIVIDADE FINALIZADORA */
+    @media (max-width: 375px) {
+      .success-title, .sub-title { font-size: 0.83rem; letter-spacing: 0.6px;}
+      .success-skull { width: 250px; height: 250px;}
+    }
+    @media (max-width: 370px) {
+      .timer, .fake-timer-edit, #timerInput, .timer-break, #timerDefinir { font-size: 0.6rem; letter-spacing: 1px; }
+      .fire-icon, .fire-flame { width: 11px; height: 11px; }
+      .logo-img { width: 34px; height: 24px; }
+      .controls { gap: 2px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container-outer" id="app-main">
+    <div class="container">
+      <img src="logofenix.png" alt="Logo Fênix" class="logo-img" draggable="false">
+      <div class="motivacional-row">
+        <div class="sub-title" id="motivacional-frase">
+          <!-- Frase será preenchida pelo JS -->
+        </div>
+      </div>
+      <div class="progress-row">
+        <span id="referencia" class="referencia-label">Meta: ??</span>
+      </div>
+      <div class="progress-bar-bg" id="progressBarBg">
+        <div class="progress-bar" id="progressBar"></div>
+        <span id="fire-icon" class="fire-icon"></span>
+      </div>
+      <div class="timer-aba-row">
+        <div class="timer-group">
+          <div class="timer-wrap" id="timerWrap">
+            <span id="timer" class="timer" tabindex="0" style="display:none;">00:00:00</span>
+            <span id="fakeTimerEdit" class="fake-timer-edit" style="display:none;">00:00:00</span>
+            <span id="timerBreak" class="timer-break" style="display:none;">BREAK</span>
+            <span id="timerDefinir" class="timer" style="color:var(--orange); display:block;">DEFINIR</span>
+            <input type="text" id="timerInput" maxlength="6" autocomplete="off" spellcheck="false" style="display:none;">
+          </div>
+          <div class="tabs">
+            <br>
+            <span id="tabCronometro" class="tab active"></span>
+            <span id="tabTimer" class="tab inactive"></span>
+          </div>
+        </div>
+      </div>
+      <div class="controls">
+        <button class="control-btn play" id="btnPlay" title="Iniciar / Retomar">&#9654;</button>
+        <button class="control-btn stop" id="btnPause" title="Pausar">&#9632;</button>
+        <button class="control-btn restart" id="btnRestart" title="Reiniciar">&#8635;</button>
+      </div>
+      <div id="pausedSection" style="display: none;">
+        <div class="paused-label">Tempo Pausado</div>
+        <span class="paused-time" id="pausedTime">00:00:00</span>
+      </div>
+    </div>
+  </div>
+  <audio id="fenix-audio" src="https://www.myinstants.com/media/sounds/grito-de-aguila-efecto.mp3" preload="auto"></audio>
+  <footer class="rodape">© 2025 CUPOM 10% 0FF: SZT10 </footer>
+  <script>
+    // 1. FRASES MOTIVACIONAIS
+    const motivacionalFrases = [
+      "A vitória começa quando você decide não desistir.",
+      "Disciplina é o que leva você além do talento.",
+      "Um guerreiro treina quando ninguém está vendo.",
+      "O sacrifício de hoje é o sucesso de amanhã.",
+      "Sua meta é o seu novo limite.",
+      "Nada resiste à força de um propósito.",
+      "O impossível só existe até alguém tentar.",
+      "Suor, foco e vontade: os três pilares do vencedor.",
+      "O medo não para guerreiros, apenas os alerta.",
+      "A excelência é construída em cada repetição.",
+      "Resiliência é cair sete vezes e levantar oito.",
+      "O caminho do sucesso é pavimentado com esforço.",
+      "Quem quer, faz; quem não quer, arranja desculpas.",
+      "A dor passa, o resultado permanece.",
+      "Quando pensar em desistir, lembre-se do porquê começou.",
+      "A vitória é de quem não foge da luta.",
+      "Cansado? Então descanse, mas não desista.",
+      "A disciplina vence a motivação todos os dias.",
+      "A persistência coloca você onde a sorte não chega.",
+      "Ação é o antídoto para a dúvida.",
+      "Todo campeão já foi um iniciante.",
+      "O desconforto faz parte do crescimento.",
+      "Pense como um guerreiro e aja como um general.",
+      "Sonhe grande, treine pesado, conquiste mais.",
+      "Concentre-se no processo, não apenas no resultado.",
+      "A força de vontade é sua maior arma.",
+      "Quem sonha alto voa longe.",
+      "A cada desafio, uma oportunidade de evoluir.",
+      "Se fosse fácil, qualquer um faria.",
+      "Treine até não precisar pensar, apenas agir.",
+      "A preparação evita o fracasso.",
+      "Não espere; conquiste!",
+      "Seu maior rival é você mesmo.",
+      "Cumpra o seu dever, honre a sua palavra.",
+      "O estudo de hoje é o orgulho de amanhã.",
+      "O fracasso é o tempero que dá sabor à vitória.",
+      "A mente comanda o corpo.",
+      "A batalha mais difícil é contra a própria zona de conforto.",
+      "Ninguém é forte o tempo todo, mas nunca se permita ser fraco por opção.",
+      "Comprometimento é fazer mesmo sem vontade.",
+      "O suor de hoje é a medalha de amanhã.",
+      "Os fracos desistem; os fortes persistem.",
+      "A diferença entre o ordinário e o extraordinário é o esforço extra.",
+      "Todo dia é um novo início.",
+      "Você nunca sabe o quão forte é, até ser forte ser a sua única escolha.",
+      "A meta parece impossível até ser alcançada.",
+      "A coragem é o início de toda conquista.",
+      "Não deixe a dúvida decidir por você.",
+      "Resultados exigem dedicação diária.",
+      "Nada supera o trabalho duro.",
+      "Você é o único responsável pelo seu sucesso.",
+      "A cada manhã, renove seu compromisso.",
+      "Treine seu corpo, discipline sua mente.",
+      "É nos momentos difíceis que os fortes se destacam.",
+      "Faça o seu melhor até que se torne o seu normal.",
+      "O amanhã pertence a quem persiste hoje.",
+      "O sucesso é a soma de pequenos esforços repetidos dia após dia.",
+      "Não há vitória sem sacrifício.",
+      "Só vence quem resiste até o fim.",
+      "Encare o medo e avance.",
+      "A zona de conforto é o maior inimigo do progresso.",
+      "A única derrota é desistir.",
+      "Quem estuda com garra conquista com honra.",
+      "Transforme pressão em combustível.",
+      "O segredo do sucesso é começar.",
+      "Seja constante, não perfeito.",
+      "As dificuldades são degraus na escada do sucesso.",
+      "Não peça facilidade; peça força.",
+      "Acredite na sua capacidade, treine sua disciplina.",
+      "O caminho é longo, mas a vitória é doce.",
+      "O limite só existe para ser superado.",
+      "Você é mais forte do que imagina.",
+      "Fracassar faz parte do processo; desistir, não.",
+      "Conquiste seus objetivos com suor e honra.",
+      "Você não precisa ser o melhor, só precisa dar o seu melhor.",
+      "Foco, força, fé e ação.",
+      "Transforme o cansaço em persistência.",
+      "Só existe um caminho: continuar avançando.",
+      "A dor é temporária; o orgulho é eterno.",
+      "O medo limita, a disciplina liberta.",
+      "Hoje é um sacrifício, amanhã é uma conquista.",
+      "A vitória é construída dia após dia.",
+      "A consistência é mais forte do que o talento.",
+      "Honre cada minuto de dedicação.",
+      "Comece, mesmo sem motivação.",
+      "Coragem é insistir mesmo quando o medo aparece.",
+      "Desistir não é opção para quem tem propósito.",
+      "O impossível é apenas o possível que ainda não foi conquistado.",
+      "Lute, persista, vença.",
+      "Resiliência é continuar mesmo quando tudo diz para parar.",
+      "O maior erro é não tentar.",
+      "Dê o primeiro passo, depois outro e mais outro.",
+      "Nada substitui o esforço diário.",
+      "Seja forte para cumprir, não apenas para sonhar.",
+      "Seja a inspiração que você procura.",
+      "Faça o que precisa ser feito, mesmo sem vontade.",
+      "Nunca subestime o poder do hábito.",
+      "Com esforço e foco, tudo se conquista.",
+      "Não recue diante das dificuldades.",
+      "Ser forte é uma escolha diária.",
+      "Cada dia de treino é um degrau a mais na escada da vitória.",
+      "Você é capaz de superar qualquer obstáculo."
+    ];
+
+    let frasesUsadas = [];
+    let fraseAtualIndex = null;
+    let fraseTimerInterval = null;
+    const motivacionalEl = document.getElementById('motivacional-frase');
+
+    function proximaFraseMotivacional(forceNext = false) {
+      if (frasesUsadas.length >= motivacionalFrases.length) frasesUsadas = [];
+      let idx;
+      do {
+        idx = Math.floor(Math.random() * motivacionalFrases.length);
+      } while ((frasesUsadas.includes(idx) && frasesUsadas.length < motivacionalFrases.length) || (idx === fraseAtualIndex && motivacionalFrases.length > 1));
+      frasesUsadas.push(idx);
+      fraseAtualIndex = idx;
+      motivacionalEl.textContent = motivacionalFrases[idx];
+    }
+    // Inicializa com a primeira frase
+    proximaFraseMotivacional();
+
+    function iniciarCicloFrasesMotivacionais() {
+      if (fraseTimerInterval) clearInterval(fraseTimerInterval);
+      fraseTimerInterval = setInterval(() => {
+        proximaFraseMotivacional();
+      }, 5 * 60 * 1000); // 5 minutos
+    }
+    iniciarCicloFrasesMotivacionais();
+
+    // Gatilhos para reiniciar ciclo ao resetar
+    function resetFraseMotivacional() {
+      proximaFraseMotivacional(true);
+    }
+
+    // 2. Variáveis globais do timer
+    let mode = "cronometro";
+    let running = false;
+    let paused = false;
+    let startTime = null;
+    let elapsed = 0;
+    let timerTarget = null; // AGORA começa indefinido
+    let timerSetByUser = false;
+    let intervalId = null;
+    let pausedStart = null;
+    let pausedElapsed = 0;
+    let pausedIntervalId = null;
+    let timerEditable = true;
+    let totalPausedTime = 0;
+    let metaDefinida = false;
+    const timerEl = document.getElementById('timer');
+    const timerInput = document.getElementById('timerInput');
+    const fakeTimerEdit = document.getElementById('fakeTimerEdit');
+    const progressBar = document.getElementById('progressBar');
+    const progressBarBg = document.getElementById('progressBarBg');
+    const btnPlay = document.getElementById('btnPlay');
+    const btnPause = document.getElementById('btnPause');
+    const btnRestart = document.getElementById('btnRestart');
+    const tabCronometro = document.getElementById('tabCronometro');
+    const tabTimer = document.getElementById('tabTimer');
+    const pausedSection = document.getElementById('pausedSection');
+    const pausedTimeEl = document.getElementById('pausedTime');
+    const referenciaEl = document.getElementById('referencia');
+    const fireIcon = document.getElementById('fire-icon');
+    const timerBreakEl = document.getElementById('timerBreak');
+    const timerDefinir = document.getElementById('timerDefinir');
+
+    // 3. UTILS
+    function pad(n) { return n < 10 ? "0"+n : n; }
+    function msToHMS(ms) {
+      ms = Math.max(0, ms);
+      const s = Math.floor(ms/1000);
+      return [pad(Math.floor(s/3600)), pad(Math.floor((s%3600)/60)), pad(s%60)].join(':');
+    }
+    function metaFormat(ms) {
+      ms = Math.max(0, ms);
+      let s = Math.floor(ms/1000);
+      let h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+      let out = "";
+      if (h > 0 && m > 0) out += h+"h "+pad(m)+"min";
+      else if (h > 0) out += h+"h";
+      else if (m > 0) out += pad(m)+"min";
+      else out += sec+"s";
+      return out;
+    }
+    function renderReferencia() {
+      if (!timerSetByUser || timerTarget === null || timerTarget === 0) {
+        referenciaEl.textContent = "Meta: ??";
+      } else {
+        referenciaEl.textContent = "Meta: " + metaFormat(timerTarget);
+      }
+    }
+    // 4. ANIMAÇÃO DO FOGO MAIS EXAGERADA
+    function renderFireIcon(percent) {
+      // Tamanho e posição ajustada para barra duplicada
+      fireIcon.innerHTML = `
+      <svg class="fire-flame" viewBox="0 0 64 64" fill="none">
+        <g>
+          <path id="flame-main" d="M32 6C23 27 54 38 32 58C45 50 65 36 49 14C56 34 23 53 23 63A13 13 0 0 0 63 55C63 31 32 14 32 6Z"
+                fill="url(#grad1)">
+            <animate attributeName="d"
+              values="
+                M32 6C23 27 54 38 32 58C45 50 65 36 49 14C56 34 23 53 23 63A13 13 0 0 0 63 55C63 31 32 14 32 6Z;
+                M32 6C18 29 59 42 32 58C51 55 68 34 50 16C60 36 25 55 25 63A13 13 0 0 0 63 55C63 31 32 14 32 6Z;
+                M32 6C23 27 54 38 32 58C45 50 65 36 49 14C56 34 23 53 23 63A13 13 0 0 0 63 55C63 31 32 14 32 6Z
+              "
+              dur="0.65s"
+              repeatCount="indefinite"/>
+          </path>
+          <path id="flame-inner" d="M40 55 Q42 40 32 50 Q36 45 35 55 Z"
+                fill="url(#grad2)">
+            <animate attributeName="d"
+              values="
+                M40 55 Q42 40 32 50 Q36 45 35 55 Z;
+                M42 53 Q45 35 33 52 Q37 44 38 56 Z;
+                M40 55 Q42 40 32 50 Q36 45 35 55 Z
+              "
+              dur="0.56s"
+              repeatCount="indefinite"/>
+          </path>
+          <ellipse cx="32" cy="46" rx="7" ry="8" fill="url(#grad3)">
+            <animate attributeName="ry"
+              values="8;12;8"
+              dur="0.7s"
+              repeatCount="indefinite"/>
+            <animate attributeName="cx"
+              values="32;30;32"
+              dur="0.56s"
+              repeatCount="indefinite"/>
+          </ellipse>
+        </g>
+        <defs>
+          <linearGradient id="grad1" x1="10" y1="7" x2="56" y2="63" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#FFD700"/>
+            <stop offset="0.15" stop-color="#FFA500"/>
+            <stop offset="0.3" stop-color="#FF9900"/>
+            <stop offset="0.52" stop-color="#FF6600"/>
+            <stop offset="1" stop-color="#C1440E"/>
+          </linearGradient>
+          <linearGradient id="grad2" x1="32" y1="45" x2="42" y2="55" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#FFF8DC"/>
+            <stop offset="0.5" stop-color="#FFD700"/>
+            <stop offset="0.8" stop-color="#FF9900"/>
+            <stop offset="1" stop-color="#FF6600"/>
+          </linearGradient>
+          <radialGradient id="grad3" cx="32" cy="46" r="10" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#FFFFAA" stop-opacity="0.88"/>
+            <stop offset="0.6" stop-color="#FFDD55" stop-opacity="0.63"/>
+            <stop offset="1" stop-color="#FF6600" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+      </svg>`;
+      fireIcon.style.display = 'block';
+      let barW = progressBarBg.offsetWidth;
+      let barInner = progressBar.offsetWidth;
+      let fireW = fireIcon.offsetWidth || 62;
+      let minLeft = -12;
+      let maxLeft = barW - fireW + 12;
+      let left = Math.max(minLeft, Math.min(maxLeft, barInner - fireW/2));
+      fireIcon.style.left = (barInner > fireW ? left : minLeft) + "px";
+    }
+    // 5. RENDERIZAÇÃO DO TIMER/DISPLAY (incluindo palavra DEFINIR e BREAK)
+    function renderTimer() {
+      // Se não há meta, mostra "DEFINIR"
+      if (!timerSetByUser || timerTarget === null || timerTarget === 0) {
+        timerEl.style.display = "none";
+        fakeTimerEdit.style.display = "none";
+        timerBreakEl.style.display = "none";
+        timerDefinir.style.display = "block";
+        return;
+      }
+      timerDefinir.style.display = "none";
+      // Se está pausado, mostrar BREAK (quando aplicável)
+      if (paused) {
+        timerEl.style.display = "none";
+        fakeTimerEdit.style.display = "none";
+        timerBreakEl.style.display = "block";
+        timerBreakEl.textContent = "BREAK";
+        return;
+      }
+      timerBreakEl.style.display = "none";
+      timerEl.style.display = "block";
+      // Normal
+      let display;
+      if (mode === "cronometro") display = msToHMS(elapsed);
+      else display = msToHMS(timerTarget - elapsed);
+      timerEl.textContent = display;
+      updateProgressBar();
+    }
+    function updateProgressBar() {
+      if (!timerSetByUser || timerTarget === null || timerTarget === 0) {
+        progressBar.style.width = "0%";
+        renderFireIcon(0);
+        return;
+      }
+      let percent;
+      percent = (mode === "cronometro")
+        ? Math.min(100, (elapsed / timerTarget) * 100)
+        : Math.max(0, 100 - ((elapsed / timerTarget) * 100));
+      progressBar.style.width = percent + "%";
+      renderFireIcon(percent);
+    }
+    // 6. LÓGICA DE START/PAUSE/RESUME/RESET
+    function getPercent() {
+      if (!timerSetByUser || timerTarget === null || timerTarget === 0) return 0;
+      return (mode === "cronometro")
+        ? Math.min(100, (elapsed / timerTarget) * 100)
+        : Math.max(0, 100 - ((elapsed / timerTarget) * 100));
+    }
+    function start() {
+      if (!timerSetByUser || timerTarget === null || timerTarget === 0) return; // Não inicia se não há meta
+      if (timerInput.style.display === "block") return;
+      if (running) return;
+      running = true;
+      paused = false;
+      pausedSection.style.display = "none";
+      btnPlay.classList.remove("pulse-animate");
+      if (!startTime) {
+        startTime = Date.now();
+        if (pausedElapsed > 0) {
+          elapsed = pausedElapsed;
+          pausedElapsed = 0;
+        } else {
+          elapsed = 0;
+        }
+      } else if (pausedStart) {
+        totalPausedTime += Date.now() - pausedStart;
+        pausedStart = null;
+      }
+      intervalId = setInterval(tick, 220);
+      renderFireIcon(getPercent());
+      renderTimer();
+    }
+    function tick() {
+      if (!running) return;
+      elapsed = pausedElapsed + (Date.now() - startTime);
+      if (mode === "timer") {
+        let remaining = timerTarget - elapsed;
+        if (remaining <= 0) {
+          elapsed = timerTarget;
+          running = false;
+          clearInterval(intervalId);
+          showSuccess();
+        }
+      } else {
+        if (elapsed >= timerTarget) {
+          elapsed = timerTarget;
+          running = false;
+          clearInterval(intervalId);
+          showSuccess();
+        }
+      }
+      renderTimer();
+      renderFireIcon(getPercent());
+    }
+    function pause() {
+      if (!timerSetByUser || timerTarget === null || timerTarget === 0) return;
+      if (timerInput.style.display === "block") return;
+      if (!running) return;
+      running = false;
+      paused = true;
+      clearInterval(intervalId);
+      pausedSection.style.display = "block";
+      pausedElapsed = elapsed;
+      pausedStart = Date.now();
+      updatePausedTime();
+      pausedIntervalId = setInterval(updatePausedTime, 500);
+      renderFireIcon(getPercent());
+      // 7. Ao pausar, anima o botão iniciar (induz retomada)
+      btnPlay.classList.add("pulse-animate");
+      renderTimer();
+    }
+    function updatePausedTime() {
+      let now = Date.now();
+      let total = totalPausedTime;
+      if (paused && pausedStart) total += (now - pausedStart);
+      pausedTimeEl.textContent = msToHMS(total + 1000);
+      renderFireIcon(getPercent());
+    }
+    function resume() {
+      if (timerInput.style.display === "block") return;
+      if (!paused) return;
+      paused = false;
+      pausedSection.style.display = "none";
+      clearInterval(pausedIntervalId);
+      if (pausedStart) {
+        totalPausedTime += Date.now() - pausedStart;
+        pausedStart = null;
+      }
+      startTime = Date.now();
+      start();
+    }
+    function reset(keepMeta) {
+      // Quando clicar em redefinir, recarrega página (solicitação 1)
+      window.location.reload();
+    }
+    // 8. TROCA DE TABS E MODOS
+    tabCronometro.onclick = () => {
+      if (timerInput.style.display === "block") return;
+      if (mode !== "cronometro") {
+        mode = "cronometro";
+        tabCronometro.classList.add('active');
+        tabCronometro.classList.remove('inactive');
+        tabTimer.classList.remove('active');
+        tabTimer.classList.add('inactive');
+        timerEditable = true;
+        timerEl.classList.add('editable');
+        timerSetByUser = false;
+        timerTarget = null;
+        metaDefinida = false;
+        window.location.reload(); // também recarrega ao trocar de aba
+      }
+    };
+    tabTimer.onclick = () => {
+      if (timerInput.style.display === "block") return;
+      if (mode !== "timer") {
+        mode = "timer";
+        tabTimer.classList.add('active');
+        tabTimer.classList.remove('inactive');
+        tabCronometro.classList.remove('active');
+        tabCronometro.classList.add('inactive');
+        timerEditable = true;
+        timerEl.classList.add('editable');
+        timerTarget = null;
+        timerSetByUser = false;
+        metaDefinida = false;
+        window.location.reload(); // também recarrega ao trocar de aba
+      }
+    };
+    // 9. EDIÇÃO DO TEMPO (INCLUSIVE CONFIRMAÇÃO VIA BOTÃO PLAY)
+    timerEl.onclick = () => {
+      if (running || paused) return;
+      if (!timerEditable) return;
+      timerInput.value = "";
+      timerEl.style.display = "none";
+      timerInput.style.display = "block";
+      fakeTimerEdit.style.display = "block";
+      timerDefinir.style.display = "none";
+      fakeTimerEdit.textContent = "00:00:00";
+      timerInput.focus();
+      updateTimerInputMask();
+      btnPlay.classList.add("pulse-animate");
+    };
+    timerDefinir.onclick = timerEl.onclick;
+    timerInput.oninput = updateTimerInputMask;
+    timerInput.onkeydown = function(e){
+      if (e.key === "Enter") {
+        confirmTimerEdit();
+        e.preventDefault();
+      }
+      if (e.key === "Escape") {
+        timerInput.style.display = "none";
+        fakeTimerEdit.style.display = "none";
+        timerEl.style.display = metaDefinida ? "block" : "none";
+        timerDefinir.style.display = metaDefinida ? "none" : "block";
+        renderTimer();
+        btnPlay.classList.remove("pulse-animate");
+        e.preventDefault();
+      }
+      if (!/[0-9]/.test(e.key) && e.key.length === 1 && e.key !== "Backspace" && e.key !== "Delete" && e.key !== "Tab" && e.key !== "ArrowLeft" && e.key !== "ArrowRight") {
+        e.preventDefault();
+      }
+    };
+    timerInput.onblur = function() {
+      setTimeout(() => {
+        if (timerInput.style.display === "block") confirmTimerEdit();
+      }, 100);
+    };
+
+    function updateTimerInputMask() {
+      let digits = timerInput.value.replace(/\D/g, '').slice(0,6);
+      let padded = digits.padStart(6, '0');
+      let h = padded.slice(0,2), m = padded.slice(2,4), s = padded.slice(4,6);
+      fakeTimerEdit.textContent = `${h}:${m}:${s}`;
+      fakeTimerEdit.style.color = digits.length === 0 ? "#bbb" : "var(--orange)";
+    }
+    function confirmTimerEdit() {
+      let digits = timerInput.value.replace(/\D/g, '').slice(0,6);
+      if (digits.length === 0){
+        timerInput.style.display = "none";
+        fakeTimerEdit.style.display = "none";
+        timerEl.style.display = metaDefinida ? "block" : "none";
+        timerDefinir.style.display = metaDefinida ? "none" : "block";
+        renderTimer();
+        return;
+      }
+      let padded = digits.padStart(6,'0');
+      let h = +padded.slice(0,2), m = +padded.slice(2,4), s = +padded.slice(4,6);
+      timerTarget = ((h*3600)+(m*60)+s)*1000;
+      timerSetByUser = true;
+      metaDefinida = true;
+      timerInput.style.display = "none";
+      fakeTimerEdit.style.display = "none";
+      timerEl.style.display = "block";
+      timerDefinir.style.display = "none";
+      // O reset não recarrega página após definir tempo, mantêm o estado:
+      running = false;
+      paused = false;
+      clearInterval(intervalId);
+      clearInterval(pausedIntervalId);
+      elapsed = 0;
+      pausedElapsed = 0;
+      pausedStart = null;
+      totalPausedTime = 0;
+      startTime = null;
+      pausedSection.style.display = "none";
+      btnPlay.classList.add("pulse-animate");
+      renderReferencia();
+      renderTimer();
+      renderFireIcon(getPercent());
+      resetFraseMotivacional();
+    }
+    // Permite confirmar meta pelo play
+    btnPlay.onclick = () => {
+      if (timerInput.style.display === "block") {
+        confirmTimerEdit();
+        setTimeout(()=>{
+          if (timerSetByUser) {
+            btnPlay.classList.remove("pulse-animate");
+            start();
+          }
+        }, 60);
+        return;
+      }
+      if (!timerSetByUser || timerTarget === null || timerTarget === 0) {
+        btnPlay.classList.add("pulse-animate");
+        return;
+      }
+      if (paused) {
+        btnPlay.classList.remove("pulse-animate");
+        resume();
+      } else if (!running) {
+        if (elapsed >= timerTarget) {
+          window.location.reload();
+        }
+        btnPlay.classList.remove("pulse-animate");
+        start();
+      }
+    };
+    btnPause.onclick = () => {
+      if (running) pause();
+    };
+    btnRestart.onclick = () => {
+      window.location.reload();
+    };
+
+    // Botão play ganha animação ao editar meta ou pausar
+    function startPulseBtn() { btnPlay.classList.add("pulse-animate"); }
+    function stopPulseBtn() { btnPlay.classList.remove("pulse-animate"); }
+
+    document.querySelectorAll('.tab, .control-btn').forEach(el => {
+      el.onmousedown = e => e.preventDefault();
+    });
+    window.addEventListener("resize", ()=>{ renderFireIcon(getPercent()); });
+
+    // 11. TELA DE SUCESSO/MISSÃO CUMPRIDA
+    function showSuccess() {
+      let oldFenix = document.getElementById("fenix-diagonal-bg");
+      if (oldFenix) oldFenix.remove();
+      let bg = document.createElement("div");
+      bg.id = "fenix-diagonal-bg";
+      bg.className = "fenix-diagonal-bg";
+      document.body.appendChild(bg);
+      let fenix = document.createElement("img");
+      fenix.src = "logofenix.png";
+      fenix.className = "fenix-diagonal";
+      fenix.alt = "Fênix";
+      bg.appendChild(fenix);
+      let audio = document.getElementById("fenix-audio");
+      if (audio) {
+        audio.currentTime = 0;
+        audio.play();
+      }
+      fenix.addEventListener('animationend', () => {
+        bg.remove();
+        showSuccessModal();
+      });
+    }
+    function showSuccessModal() {
+      let modal = document.createElement('div');
+      modal.className = "success-modal-bg";
+      modal.innerHTML = `
+        <div class="success-modal-content">
+          <img src="success.png" alt="Caveira" class="success-skull">
+          <div class="success-title">MISSÃO CUMPRIDA!</div>
+          <div class="success-msg">Parabéns! Você planejou como um GENERAL e executou como um SOLDADO!<br>🔥</div>
+          <button class="success-btn" id="btnNovaMeta">Nova Meta</button>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      document.getElementById('btnNovaMeta').onclick = () => {
+        window.location.reload();
+      };
+    }
+    // 12. INICIALIZAÇÃO E EXIBIÇÃO INICIAIS
+    renderReferencia();
+    renderTimer();
+    renderFireIcon(getPercent());
+    // 2. Garantia absoluta de que não haverá rolagem
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+  </script>
+</body>
+<footer class="rodape">© 2025 CUPOM 10% 0FF: SZT10 </footer>
+</html>
